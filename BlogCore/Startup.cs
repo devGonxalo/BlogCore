@@ -1,5 +1,7 @@
 using BlogCore.AccesoDatos.Data;
+using BlogCore.AccesoDatos.Data.Inicializado;
 using BlogCore.AccesoDatos.Data.Repository;
+using BlogCore.Models;
 using BlogCore.Utilidades;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -33,12 +35,14 @@ namespace BlogCore
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddIdentity<ApplicationUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddRoleManager<RoleManager<IdentityRole>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
             services.AddSingleton<IEmailSender, EmailSender>();
 
             services.AddScoped<IContenedorTrabajo, ContenedorTrabajo>();
+            services.AddScoped<IInicializadorDB, InicializadorDB>();
 
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
@@ -46,7 +50,7 @@ namespace BlogCore
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IInicializadorDB dbIniciar)
         {
             if (env.IsDevelopment())
             {
@@ -63,6 +67,7 @@ namespace BlogCore
             app.UseStaticFiles();
 
             app.UseRouting();
+            dbIniciar.Inicializar();
 
             app.UseAuthentication();
             app.UseAuthorization();
